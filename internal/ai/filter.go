@@ -1,4 +1,4 @@
-package main
+package ai
 
 import (
 	"bytes"
@@ -8,30 +8,32 @@ import (
 	"io"
 	"net/http"
 	"time"
+
+	"github.com/Minatonton/x-crawler/internal/twitter"
 )
 
-// AIFilter はClaude APIを使った分析フィルター
-type AIFilter struct {
+// Filter はClaude APIを使った分析フィルター
+type Filter struct {
 	apiKey     string
 	model      string
 	httpClient *http.Client
 }
 
-// AIAnalysis はAI分析結果
-type AIAnalysis struct {
-	Score        int      `json:"score"`
-	Category     string   `json:"category"`
-	Sentiment    string   `json:"sentiment"`
-	Tickers      []string `json:"tickers"`
-	Summary      string   `json:"summary"`
-	KeyPoints    []string `json:"key_points"`
-	Urgency      string   `json:"urgency"`
-	Reasoning    string   `json:"reasoning"`
+// Analysis はAI分析結果
+type Analysis struct {
+	Score     int      `json:"score"`
+	Category  string   `json:"category"`
+	Sentiment string   `json:"sentiment"`
+	Tickers   []string `json:"tickers"`
+	Summary   string   `json:"summary"`
+	KeyPoints []string `json:"key_points"`
+	Urgency   string   `json:"urgency"`
+	Reasoning string   `json:"reasoning"`
 }
 
-// NewAIFilter は新しいAIフィルターを作成
-func NewAIFilter(apiKey, model string) *AIFilter {
-	return &AIFilter{
+// NewFilter は新しいAIフィルターを作成
+func NewFilter(apiKey, model string) *Filter {
+	return &Filter{
 		apiKey: apiKey,
 		model:  model,
 		httpClient: &http.Client{
@@ -41,7 +43,7 @@ func NewAIFilter(apiKey, model string) *AIFilter {
 }
 
 // Analyze はツイートを分析
-func (f *AIFilter) Analyze(ctx context.Context, tweet Tweet, traderInfo string) (*AIAnalysis, error) {
+func (f *Filter) Analyze(ctx context.Context, tweet twitter.Tweet, traderInfo string) (*Analysis, error) {
 	prompt := f.buildPrompt(tweet, traderInfo)
 
 	analysis, err := f.callClaudeAPI(ctx, prompt)
@@ -53,7 +55,7 @@ func (f *AIFilter) Analyze(ctx context.Context, tweet Tweet, traderInfo string) 
 }
 
 // buildPrompt はAI分析用のプロンプトを構築
-func (f *AIFilter) buildPrompt(tweet Tweet, traderInfo string) string {
+func (f *Filter) buildPrompt(tweet twitter.Tweet, traderInfo string) string {
 	return fmt.Sprintf(`あなたは経験豊富な金融アナリストです。以下のXポストを分析してください。
 
 投稿者: @%s
@@ -105,10 +107,10 @@ func (f *AIFilter) buildPrompt(tweet Tweet, traderInfo string) string {
 }
 
 // callClaudeAPI はClaude APIを呼び出し
-func (f *AIFilter) callClaudeAPI(ctx context.Context, prompt string) (*AIAnalysis, error) {
+func (f *Filter) callClaudeAPI(ctx context.Context, prompt string) (*Analysis, error) {
 	requestBody := map[string]interface{}{
-		"model": f.model,
-		"max_tokens": 2048,
+		"model":       f.model,
+		"max_tokens":  2048,
 		"temperature": 0.2,
 		"messages": []map[string]string{
 			{
@@ -158,7 +160,7 @@ func (f *AIFilter) callClaudeAPI(ctx context.Context, prompt string) (*AIAnalysi
 	}
 
 	// JSONレスポンスをパース
-	var analysis AIAnalysis
+	var analysis Analysis
 	text := claudeResp.Content[0].Text
 
 	// JSONブロックを抽出（```json ... ```のような形式に対応）

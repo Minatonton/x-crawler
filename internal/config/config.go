@@ -1,4 +1,4 @@
-package main
+package config
 
 import (
 	"fmt"
@@ -11,12 +11,12 @@ import (
 
 // Config はアプリケーション全体の設定
 type Config struct {
-	Interval string        `yaml:"interval"`
-	AI       AIConfig      `yaml:"ai"`
-	Traders  []Trader      `yaml:"traders"`
-	Keywords []Keyword     `yaml:"keywords"`
-	Slack    SlackConfig   `yaml:"slack"`
-	Log      LogConfig     `yaml:"log"`
+	Interval string      `yaml:"interval"`
+	AI       AIConfig    `yaml:"ai"`
+	Traders  []Trader    `yaml:"traders"`
+	Keywords []Keyword   `yaml:"keywords"`
+	Slack    SlackConfig `yaml:"slack"`
+	Log      LogConfig   `yaml:"log"`
 }
 
 // AIConfig はAI分析の設定
@@ -51,8 +51,8 @@ type LogConfig struct {
 	Level string `yaml:"level"` // debug, info, warn, error
 }
 
-// LoadConfig は設定ファイルを読み込む
-func LoadConfig(path string) (*Config, error) {
+// Load は設定ファイルを読み込む
+func Load(path string) (*Config, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read config file: %w", err)

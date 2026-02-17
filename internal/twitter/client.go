@@ -1,4 +1,4 @@
-package main
+package twitter
 
 import (
 	"context"
@@ -11,8 +11,8 @@ import (
 	"time"
 )
 
-// TwitterClient はX (Twitter) APIクライアント
-type TwitterClient struct {
+// Client はX (Twitter) APIクライアント
+type Client struct {
 	bearerToken string
 	httpClient  *http.Client
 }
@@ -26,35 +26,35 @@ type Tweet struct {
 	Username  string    // APIレスポンスには含まれないが後で設定
 }
 
-// TwitterResponse はTwitter API v2のレスポンス
-type TwitterResponse struct {
-	Data     []Tweet               `json:"data"`
-	Includes *TwitterResponseIncludes `json:"includes,omitempty"`
-	Meta     *TwitterResponseMeta  `json:"meta,omitempty"`
+// Response はTwitter API v2のレスポンス
+type Response struct {
+	Data     []Tweet           `json:"data"`
+	Includes *ResponseIncludes `json:"includes,omitempty"`
+	Meta     *ResponseMeta     `json:"meta,omitempty"`
 }
 
-// TwitterResponseIncludes はユーザー情報など
-type TwitterResponseIncludes struct {
-	Users []TwitterUser `json:"users"`
+// ResponseIncludes はユーザー情報など
+type ResponseIncludes struct {
+	Users []User `json:"users"`
 }
 
-// TwitterUser はユーザー情報
-type TwitterUser struct {
+// User はユーザー情報
+type User struct {
 	ID       string `json:"id"`
 	Username string `json:"username"`
 	Name     string `json:"name"`
 }
 
-// TwitterResponseMeta はメタ情報
-type TwitterResponseMeta struct {
+// ResponseMeta はメタ情報
+type ResponseMeta struct {
 	ResultCount int    `json:"result_count"`
 	NewestID    string `json:"newest_id"`
 	OldestID    string `json:"oldest_id"`
 }
 
-// NewTwitterClient は新しいTwitterクライアントを作成
-func NewTwitterClient(bearerToken string) *TwitterClient {
-	return &TwitterClient{
+// NewClient は新しいTwitterクライアントを作成
+func NewClient(bearerToken string) *Client {
+	return &Client{
 		bearerToken: bearerToken,
 		httpClient: &http.Client{
 			Timeout: 30 * time.Second,
@@ -63,7 +63,7 @@ func NewTwitterClient(bearerToken string) *TwitterClient {
 }
 
 // GetUserTweets は指定されたユーザーの最新ツイートを取得
-func (c *TwitterClient) GetUserTweets(ctx context.Context, username string, maxResults int) ([]Tweet, error) {
+func (c *Client) GetUserTweets(ctx context.Context, username string, maxResults int) ([]Tweet, error) {
 	// まずユーザーIDを取得
 	userID, err := c.getUserIDByUsername(ctx, username)
 	if err != nil {
@@ -91,7 +91,7 @@ func (c *TwitterClient) GetUserTweets(ctx context.Context, username string, maxR
 }
 
 // SearchTweets はキーワードでツイートを検索
-func (c *TwitterClient) SearchTweets(ctx context.Context, query string, maxResults int) ([]Tweet, error) {
+func (c *Client) SearchTweets(ctx context.Context, query string, maxResults int) ([]Tweet, error) {
 	endpoint := "https://api.twitter.com/2/tweets/search/recent"
 	params := url.Values{}
 	params.Set("query", query)
@@ -109,7 +109,7 @@ func (c *TwitterClient) SearchTweets(ctx context.Context, query string, maxResul
 }
 
 // getUserIDByUsername はユーザー名からユーザーIDを取得
-func (c *TwitterClient) getUserIDByUsername(ctx context.Context, username string) (string, error) {
+func (c *Client) getUserIDByUsername(ctx context.Context, username string) (string, error) {
 	// @を除去
 	username = strings.TrimPrefix(username, "@")
 
@@ -134,7 +134,7 @@ func (c *TwitterClient) getUserIDByUsername(ctx context.Context, username string
 	}
 
 	var result struct {
-		Data TwitterUser `json:"data"`
+		Data User `json:"data"`
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
@@ -145,7 +145,7 @@ func (c *TwitterClient) getUserIDByUsername(ctx context.Context, username string
 }
 
 // makeRequest は共通のリクエスト処理
-func (c *TwitterClient) makeRequest(ctx context.Context, endpoint string, params url.Values) ([]Tweet, error) {
+func (c *Client) makeRequest(ctx context.Context, endpoint string, params url.Values) ([]Tweet, error) {
 	urlStr := endpoint
 	if len(params) > 0 {
 		urlStr += "?" + params.Encode()
@@ -169,7 +169,7 @@ func (c *TwitterClient) makeRequest(ctx context.Context, endpoint string, params
 		return nil, fmt.Errorf("Twitter API error (status %d): %s", resp.StatusCode, string(body))
 	}
 
-	var result TwitterResponse
+	var result Response
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
 	}
@@ -182,7 +182,7 @@ func (c *TwitterClient) makeRequest(ctx context.Context, endpoint string, params
 }
 
 // makeRequestWithUsers はユーザー情報を含むリクエスト処理
-func (c *TwitterClient) makeRequestWithUsers(ctx context.Context, endpoint string, params url.Values) ([]Tweet, error) {
+func (c *Client) makeRequestWithUsers(ctx context.Context, endpoint string, params url.Values) ([]Tweet, error) {
 	urlStr := endpoint
 	if len(params) > 0 {
 		urlStr += "?" + params.Encode()
@@ -206,7 +206,7 @@ func (c *TwitterClient) makeRequestWithUsers(ctx context.Context, endpoint strin
 		return nil, fmt.Errorf("Twitter API error (status %d): %s", resp.StatusCode, string(body))
 	}
 
-	var result TwitterResponse
+	var result Response
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
 	}

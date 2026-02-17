@@ -1,4 +1,4 @@
-module github.com/nagaseitteam/x-crawler
+module github.com/Minatonton/x-crawler
 
 go 1.21
 

@@ -1,4 +1,4 @@
-package main
+package slack
 
 import (
 	"bytes"
@@ -8,19 +8,22 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/Minatonton/x-crawler/internal/ai"
+	"github.com/Minatonton/x-crawler/internal/twitter"
 )
 
-// SlackNotifier はSlack通知を送信
-type SlackNotifier struct {
+// Notifier はSlack通知を送信
+type Notifier struct {
 	webhookURL string
 	username   string
 	iconEmoji  string
 	httpClient *http.Client
 }
 
-// NewSlackNotifier は新しいSlackNotifierを作成
-func NewSlackNotifier(webhookURL, username, iconEmoji string) *SlackNotifier {
-	return &SlackNotifier{
+// NewNotifier は新しいSlackNotifierを作成
+func NewNotifier(webhookURL, username, iconEmoji string) *Notifier {
+	return &Notifier{
 		webhookURL: webhookURL,
 		username:   username,
 		iconEmoji:  iconEmoji,
@@ -31,7 +34,7 @@ func NewSlackNotifier(webhookURL, username, iconEmoji string) *SlackNotifier {
 }
 
 // NotifyTweet はツイートをSlackに通知
-func (s *SlackNotifier) NotifyTweet(ctx context.Context, tweet Tweet, analysis *AIAnalysis) error {
+func (s *Notifier) NotifyTweet(ctx context.Context, tweet twitter.Tweet, analysis *ai.Analysis) error {
 	message := s.buildMessage(tweet, analysis)
 
 	jsonData, err := json.Marshal(message)
@@ -60,7 +63,7 @@ func (s *SlackNotifier) NotifyTweet(ctx context.Context, tweet Tweet, analysis *
 }
 
 // buildMessage はSlackメッセージを構築
-func (s *SlackNotifier) buildMessage(tweet Tweet, analysis *AIAnalysis) map[string]interface{} {
+func (s *Notifier) buildMessage(tweet twitter.Tweet, analysis *ai.Analysis) map[string]interface{} {
 	emoji := s.getEmojiByUrgency(analysis.Urgency)
 	color := s.getColorByUrgency(analysis.Urgency)
 	sentimentEmoji := s.getSentimentEmoji(analysis.Sentiment)
@@ -142,7 +145,7 @@ func (s *SlackNotifier) buildMessage(tweet Tweet, analysis *AIAnalysis) map[stri
 }
 
 // NotifySimple はシンプルな通知（AI分析なし）
-func (s *SlackNotifier) NotifySimple(ctx context.Context, tweet Tweet, traderInfo string) error {
+func (s *Notifier) NotifySimple(ctx context.Context, tweet twitter.Tweet, traderInfo string) error {
 	text := fmt.Sprintf("*@%s* さんの新しい投稿:\n%s\n\n🔗 <%s|ポストを見る>",
 		tweet.Username,
 		tweet.Text,
@@ -181,7 +184,7 @@ func (s *SlackNotifier) NotifySimple(ctx context.Context, tweet Tweet, traderInf
 }
 
 // getEmojiByUrgency は緊急度に応じた絵文字を返す
-func (s *SlackNotifier) getEmojiByUrgency(urgency string) string {
+func (s *Notifier) getEmojiByUrgency(urgency string) string {
 	switch urgency {
 	case "critical":
 		return "🚨"
@@ -197,7 +200,7 @@ func (s *SlackNotifier) getEmojiByUrgency(urgency string) string {
 }
 
 // getColorByUrgency は緊急度に応じた色を返す
-func (s *SlackNotifier) getColorByUrgency(urgency string) string {
+func (s *Notifier) getColorByUrgency(urgency string) string {
 	switch urgency {
 	case "critical":
 		return "#FF0000" // 赤
@@ -213,7 +216,7 @@ func (s *SlackNotifier) getColorByUrgency(urgency string) string {
 }
 
 // getSentimentEmoji はセンチメントに応じた絵文字を返す
-func (s *SlackNotifier) getSentimentEmoji(sentiment string) string {
+func (s *Notifier) getSentimentEmoji(sentiment string) string {
 	switch sentiment {
 	case "bullish":
 		return "📈 強気"
