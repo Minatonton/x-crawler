@@ -1,0 +1,24 @@
+[Unit]
+Description=X-Crawler for Trading
+After=network.target
+
+[Service]
+Type=simple
+User=slackbot
+WorkingDirectory=/home/slackbot/x-crawler
+ExecStart=/usr/local/bin/x-crawler -config /home/slackbot/x-crawler/config.yaml
+Restart=always
+RestartSec=10
+
+# 環境変数（または EnvironmentFile=/home/slackbot/x-crawler/.env を使用）
+Environment="X_API_BEARER_TOKEN="
+Environment="ANTHROPIC_API_KEY="
+Environment="SLACK_WEBHOOK_URL="
+
+# ログ出力
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=x-crawler
+
+[Install]
+WantedBy=multi-user.target

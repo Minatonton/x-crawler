@@ -1,0 +1,52 @@
+# X-Crawler Trading Configuration
+
+# クロール実行間隔 (例: 1m, 5m, 10m, 1h)
+interval: "5m"
+
+# AI分析設定
+ai:
+  enabled: true           # AIフィルターを使用するか
+  min_score: 70          # 通知する最低スコア (0-100)
+  model: "claude-3-5-sonnet-20241022"
+
+# 監視する有名トレーダー
+traders:
+  - username: "DeItaone"
+    display_name: "DeItaone (Market News)"
+    priority: "critical"
+
+  - username: "zerohedge"
+    display_name: "Zero Hedge"
+    priority: "high"
+
+  - username: "cathiedwood"
+    display_name: "Cathie Wood (ARK Invest)"
+    priority: "high"
+
+  - username: "jimcramer"
+    display_name: "Jim Cramer"
+    priority: "normal"
+
+# 監視するキーワード (X API検索クエリ)
+keywords:
+  - query: "$SPY OR $QQQ OR $DIA -is:retweet lang:en"
+    name: "主要ETF"
+
+  - query: "($AAPL OR $MSFT OR $GOOGL OR $AMZN OR $META) earnings -is:retweet"
+    name: "FAANG決算"
+
+  - query: "$NVDA OR $AMD OR $TSM -is:retweet lang:en"
+    name: "半導体株"
+
+  - query: "(SEC filing OR 13F OR form 4) -is:retweet lang:en"
+    name: "SEC提出書類"
+
+# Slack通知設定
+slack:
+  webhook_url: "${SLACK_WEBHOOK_URL}"  # 環境変数から読み込み
+  username: "X Trading Bot"
+  icon_emoji: ":chart_with_upwards_trend:"
+
+# ログ設定
+log:
+  level: "info"  # debug, info, warn, error
